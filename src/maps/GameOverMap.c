@@ -8,7 +8,7 @@
    Section       : 
    Bank          : 0
    Map size      : 20 x 18
-   Tile set      : C:\Users\cozzi\Documents\gbdk\GBTD_GBMB_release\GBMB\tiles\MineTiles.gbr
+   Tile set      : C\assets\tiles\MineTiles.gbr
    Plane count   : 1 plane (8 bits)
    Plane order   : Tiles are continues
    Tile offset   : 0
