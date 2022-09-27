@@ -1,3 +1,4 @@
 # Minesweeper Clone
 
-Compile calling .\compile.bat
+Minesweeper clone for the Nintendo GameBoy.
+Compile calling ".\compile.bat".
