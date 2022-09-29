@@ -10,6 +10,7 @@
 #include "maps\LoseMap.h"
 #include "maps\MenuMap.h"
 #include "maps\SplashScreenMap.h"
+#include "maps\WindowMap.h"
 
 
 #define NUM_CELLS ((uint16_t)360U)
@@ -104,16 +105,19 @@ void revealCell(Cell* cells, const Cell* firstCell, bool* gameOver, uint16_t* re
   }
 }
 
-void setFlag(Cell* cells, const uint8_t cursorX, const uint8_t cursorY)
+
+void setFlag(Cell* cells, const uint8_t cursorX, const uint8_t cursorY, uint8_t* minesLeft)
 {
-  if (!cells->isRevealed)
+  if (!cells->isRevealed && (*minesLeft > 0U || cells->isFlagPresent))
   {
     cells->isFlagPresent = !cells->isFlagPresent;
+    *minesLeft = cells->isFlagPresent ? (*minesLeft)-1U : (*minesLeft)+1U;
     set_bkg_tile_xy(((cursorX-8U)>>3U), ((cursorY-16U)>>3U), (9U+cells->isFlagPresent));
   }
 }
 
-void resetGame(Cell* cells, const Cell* firstCell, const Cell* lastCell, bool* gameOver, uint16_t* revealed, uint8_t* cursorX, uint8_t* cursorY, joypads_t* jp, uint8_t* numMines)
+
+void resetGame(Cell* cells, const Cell* firstCell, const Cell* lastCell, bool* gameOver, uint16_t* revealed, uint8_t* cursorX, uint8_t* cursorY, joypads_t* jp, uint8_t* numMines, uint8_t* minesLeft)
 {
   hide_sprite(CURSOR);
   set_bkg_tiles(0U, 0U, MenuMapWidth, MenuMapHeight, MenuMap);
@@ -151,6 +155,7 @@ void resetGame(Cell* cells, const Cell* firstCell, const Cell* lastCell, bool* g
       *numMines = 56U;
       break;
   }
+  *minesLeft = *numMines;
   
   hide_sprite(MENU_SEL);
 
@@ -186,13 +191,35 @@ void showMines(Cell* cells, const Cell* firstCell, const Cell* lastCell, const C
 }
 
 
-void waitForInput(joypads_t* jp)
+void waitForInput(joypads_t* jp, const uint8_t button)
 {
   do
   {
     joypad_ex(jp);
     wait_vbl_done();
-  } while ((jp->joy0 & J_START) == 0U);
+  } while ((jp->joy0 & button) == 0U);
+}
+
+
+void toggleWindow(bool* state, const uint8_t* minesLeft)
+{
+  *state = !(*state);
+  if (*state)
+  {
+    set_win_tiles(0U, 0U, WindowMapWidth, WindowMapHeight, WindowMap);
+    uint8_t units = *minesLeft % 10U;
+    uint8_t tens = *minesLeft / 10U;
+    units = (units > 0U) ? (units+39U) : 28U;
+    tens = (tens > 0U) ? (tens+39U) : 28U;
+    set_win_tile_xy(18U, 0U, tens);
+    set_win_tile_xy(19U, 0U, units);
+    move_win(7U, 136U);
+    SHOW_WIN;
+  }
+  else
+  {
+    HIDE_WIN;
+  }
 }
 
 
@@ -206,11 +233,14 @@ uint8_t cursorY;
 bool gameOver;
 uint16_t revealed;
 uint8_t numMines;
+uint8_t minesLeft;
 uint16_t index;
+bool windowState;
 
 
 void main(void)
 {
+  windowState = false;
   set_bkg_data(0U, 203U, SplashScreenTiles);
   set_bkg_tiles(0U, 0U, SplashScreenMapWidth, SplashScreenMapHeight, SplashScreenMap);
 
@@ -220,7 +250,7 @@ void main(void)
   SHOW_SPRITES;
   DISPLAY_ON;
 
-  waitForInput(&jp);
+  waitForInput(&jp, J_START);
 
   display_off();
   HIDE_SPRITES;
@@ -239,26 +269,29 @@ void main(void)
   
   while (true)
   {
-    resetGame(cells, firstCell, lastCell, &gameOver, &revealed, &cursorX, &cursorY, &jp, &numMines);
+    resetGame(cells, firstCell, lastCell, &gameOver, &revealed, &cursorX, &cursorY, &jp, &numMines, &minesLeft);
 
     while (!gameOver)
     {
       joypad_ex(&jp);
+      if (!windowState)
+      {
+        if (jp.joy0 & J_UP) cursorY -= 8U;
+        if (jp.joy0 & J_DOWN) cursorY += 8U;
+        if (jp.joy0 & J_LEFT) cursorX -= 8U;
+        if (jp.joy0 & J_RIGHT) cursorX += 8U;
+        
+        if (cursorX < 8U) cursorX = 160U;
+        if (cursorX > 160U) cursorX = 8U;
+        if (cursorY < 16U) cursorY = 152U;
+        if (cursorY > 152U) cursorY = 16U;
 
-      if (jp.joy0 & J_UP) cursorY -= 8U;
-      if (jp.joy0 & J_DOWN) cursorY += 8U;
-      if (jp.joy0 & J_LEFT) cursorX -= 8U;
-      if (jp.joy0 & J_RIGHT) cursorX += 8U;
-      
-      if (cursorX < 8U) cursorX = 160U;
-      if (cursorX > 160U) cursorX = 8U;
-      if (cursorY < 16U) cursorY = 152U;
-      if (cursorY > 152U) cursorY = 16U;
-
-      move_sprite(CURSOR, cursorX, cursorY);
-      index = ((((cursorY - 16U)>>3U)*20U) + ((cursorX - 8U)>>3U));
-      if (jp.joy0 & J_A) revealCell(((Cell*)(firstCell+index)), firstCell, &gameOver, &revealed, &numMines);
-      if (jp.joy0 & J_B) setFlag(((Cell*)(firstCell+index)), cursorX, cursorY);
+        move_sprite(CURSOR, cursorX, cursorY);
+        index = ((((cursorY - 16U)>>3U)*20U) + ((cursorX - 8U)>>3U));
+        if (jp.joy0 & J_A) revealCell(((Cell*)(firstCell+index)), firstCell, &gameOver, &revealed, &numMines);
+        if (jp.joy0 & J_B) setFlag(((Cell*)(firstCell+index)), cursorX, cursorY, &minesLeft);
+      }
+      if (jp.joy0 & J_SELECT) toggleWindow(&windowState, &minesLeft);
 
       delay(150U);
       wait_vbl_done();
@@ -269,6 +302,6 @@ void main(void)
     set_bkg_tiles(0U, 0U, GameOverMapWidth, GameOverMapHeight, GameOverMap);
     if (NUM_CELLS - numMines <= revealed) set_bkg_tiles(11U, 6U, WinMapWidth, WinMapHeight, WinMap);
     else set_bkg_tiles(11U, 6U, LoseMapWidth, LoseMapHeight, LoseMap);
-    waitForInput(&jp);
+    waitForInput(&jp, J_START);
   }
 }
