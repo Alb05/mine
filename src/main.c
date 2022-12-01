@@ -62,10 +62,10 @@ void countMines(Cell* cells, const Cell* firstCell, const Cell* lastCell)
     }
     if (((cells-firstCell)%20U) > 0 && (cells-1U)->isMinePresent) cells->adjacentMines++;
     if (((cells-firstCell)%20U) < 19 && (cells+1U)->isMinePresent) cells->adjacentMines++;
-    if ((cells-firstCell) > 20U && (cells-20U)->isMinePresent) cells->adjacentMines++;
+    if ((cells-firstCell) > 19U && (cells-20U)->isMinePresent) cells->adjacentMines++;
     if ((cells-firstCell) < 340U && (cells+20U)->isMinePresent) cells->adjacentMines++;
-    if (((cells-firstCell)%20U) > 0U && (cells-firstCell) > 20U && (cells-21U)->isMinePresent) cells->adjacentMines++;
-    if (((cells-firstCell)%20U) < 19U && (cells-firstCell) > 20U && (cells-19U)->isMinePresent) cells->adjacentMines++;
+    if (((cells-firstCell)%20U) > 0U && (cells-firstCell) > 19U && (cells-21U)->isMinePresent) cells->adjacentMines++;
+    if (((cells-firstCell)%20U) < 19U && (cells-firstCell) > 19U && (cells-19U)->isMinePresent) cells->adjacentMines++;
     if (((cells-firstCell)%20U) > 0U && (cells-firstCell) < 340U && (cells+19U)->isMinePresent) cells->adjacentMines++;
     if (((cells-firstCell)%20U) < 19U && (cells-firstCell) < 340U && (cells+21U)->isMinePresent) cells->adjacentMines++;
     cells++;
@@ -91,15 +91,19 @@ void revealCell(Cell* cells, const Cell* firstCell, bool* gameOver, uint16_t* re
   {
     *gameOver = true;
     *revealed = (*revealed) - 1U;
+    NR41_REG = 0x3FU;
+    NR42_REG = 0xF7U;
+    NR43_REG = 0x80U;
+    NR44_REG = 0x80U;
   }
   else if (cells->adjacentMines == 0)
   {
     if (((cells-firstCell)%20U) > 0U) revealCell((cells-1U), firstCell, gameOver, revealed, numMines);
     if (((cells-firstCell)%20U) < 19U) revealCell((cells+1U), firstCell, gameOver, revealed, numMines);
-    if ((cells-firstCell) > 20U) revealCell((cells-20U), firstCell, gameOver, revealed, numMines);
+    if ((cells-firstCell) > 19U) revealCell((cells-20U), firstCell, gameOver, revealed, numMines);
     if ((cells-firstCell) < 340U) revealCell((cells+20U), firstCell, gameOver, revealed, numMines);
-    if (((cells-firstCell)%20U) > 0U && (cells-firstCell) > 20U) revealCell((cells-21U), firstCell, gameOver, revealed, numMines);
-    if (((cells-firstCell)%20U) < 19U && (cells-firstCell) > 20U) revealCell((cells-19U), firstCell, gameOver, revealed, numMines);
+    if (((cells-firstCell)%20U) > 0U && (cells-firstCell) > 19U) revealCell((cells-21U), firstCell, gameOver, revealed, numMines);
+    if (((cells-firstCell)%20U) < 19U && (cells-firstCell) > 19U) revealCell((cells-19U), firstCell, gameOver, revealed, numMines);
     if (((cells-firstCell)%20U) > 0U && (cells-firstCell) < 340U) revealCell((cells+19U), firstCell, gameOver, revealed, numMines);
     if (((cells-firstCell)%20U) < 19U && (cells-firstCell) < 340U) revealCell((cells+21U), firstCell, gameOver, revealed, numMines);
   }
@@ -117,7 +121,7 @@ void setFlag(Cell* cells, const uint8_t cursorX, const uint8_t cursorY, uint8_t*
 }
 
 
-void resetGame(Cell* cells, const Cell* firstCell, const Cell* lastCell, bool* gameOver, uint16_t* revealed, uint8_t* cursorX, uint8_t* cursorY, joypads_t* jp, uint8_t* numMines, uint8_t* minesLeft)
+void resetGame(Cell* cells, const Cell* firstCell, const Cell* lastCell, bool* gameOver, uint16_t* revealed, uint8_t* cursorX, uint8_t* cursorY, joypads_t* jp, uint8_t* numMines, uint8_t* minesLeft, bool* buttonPressed)
 {
   hide_sprite(CURSOR);
   set_bkg_tiles(0U, 0U, MenuMapWidth, MenuMapHeight, MenuMap);
@@ -131,15 +135,36 @@ void resetGame(Cell* cells, const Cell* firstCell, const Cell* lastCell, bool* g
 
   do
   {
+    *buttonPressed = false;
     joypad_ex(jp);
-    if (jp->joy0 & J_DOWN) *cursorY += 16U;
-    if (jp->joy0 & J_UP) *cursorY -= 16U;
-    if (*cursorY > 88U) *cursorY = 56U;
-    if (*cursorY < 56U) *cursorY = 88U;
-    move_sprite(MENU_SEL, *cursorX, *cursorY);
+    if (jp->joy0 & J_DOWN)
+    {
+      *cursorY += 16U;
+      *buttonPressed = true;
+    }
+    if (jp->joy0 & J_UP)
+    {
+      *cursorY -= 16U;
+      *buttonPressed = true;
+    }
+    if (*buttonPressed)
+    {
+      if (*cursorY > 88U) *cursorY = 56U;
+      if (*cursorY < 56U) *cursorY = 88U;
+      move_sprite(MENU_SEL, *cursorX, *cursorY);
+      NR10_REG = 0x00U;
+      NR11_REG = 0x90U;
+      NR12_REG = 0x43U;
+      NR13_REG = 0x73U;
+      NR14_REG = 0x86U;
+    }
     wait_vbl_done();
-    delay(150U);
+    if (*buttonPressed) delay(200U);
   } while ((jp->joy0 & J_A) == 0U);
+  NR21_REG = 0xC0U;
+  NR22_REG = 0xB5U;
+  NR23_REG = 0x49U;
+  NR24_REG = 0x87U;
 
   switch (*cursorY)
   {
@@ -236,11 +261,17 @@ uint8_t numMines;
 uint8_t minesLeft;
 uint16_t index;
 bool windowState;
+bool buttonPressed;
 
 
 void main(void)
 {
+  NR52_REG = 0x80U;
+  NR50_REG = 0x77U;
+  NR51_REG = 0xFFU;
+
   windowState = false;
+
   set_bkg_data(0U, 203U, SplashScreenTiles);
   set_bkg_tiles(0U, 0U, SplashScreenMapWidth, SplashScreenMapHeight, SplashScreenMap);
 
@@ -269,32 +300,68 @@ void main(void)
   
   while (true)
   {
-    resetGame(cells, firstCell, lastCell, &gameOver, &revealed, &cursorX, &cursorY, &jp, &numMines, &minesLeft);
+    resetGame(cells, firstCell, lastCell, &gameOver, &revealed, &cursorX, &cursorY, &jp, &numMines, &minesLeft, &buttonPressed);
 
     while (!gameOver)
     {
+      buttonPressed = false;
       joypad_ex(&jp);
       if (!windowState)
       {
-        if (jp.joy0 & J_UP) cursorY -= 8U;
-        if (jp.joy0 & J_DOWN) cursorY += 8U;
-        if (jp.joy0 & J_LEFT) cursorX -= 8U;
-        if (jp.joy0 & J_RIGHT) cursorX += 8U;
+        if (jp.joy0 & J_UP)
+        {
+          cursorY -= 8U;
+          buttonPressed = true;
+        }
+        if (jp.joy0 & J_DOWN)
+        {
+          cursorY += 8U;
+          buttonPressed = true;
+        }
+        if (jp.joy0 & J_LEFT)
+        {
+          cursorX -= 8U;
+          buttonPressed = true;
+        }
+        if (jp.joy0 & J_RIGHT)
+        {
+          cursorX += 8U;
+          buttonPressed = true;
+        }
         
-        if (cursorX < 8U) cursorX = 160U;
-        if (cursorX > 160U) cursorX = 8U;
-        if (cursorY < 16U) cursorY = 152U;
-        if (cursorY > 152U) cursorY = 16U;
+        if (buttonPressed)
+        {
+          if (cursorX < 8U) cursorX = 160U;
+          if (cursorX > 160U) cursorX = 8U;
+          if (cursorY < 16U) cursorY = 152U;
+          if (cursorY > 152U) cursorY = 16U;
 
-        move_sprite(CURSOR, cursorX, cursorY);
+          move_sprite(CURSOR, cursorX, cursorY);
+        }
         index = ((((cursorY - 16U)>>3U)*20U) + ((cursorX - 8U)>>3U));
-        if (jp.joy0 & J_A) revealCell(((Cell*)(firstCell+index)), firstCell, &gameOver, &revealed, &numMines);
-        if (jp.joy0 & J_B) setFlag(((Cell*)(firstCell+index)), cursorX, cursorY, &minesLeft);
+        if (jp.joy0 & J_A)
+        {
+          revealCell(((Cell*)(firstCell+index)), firstCell, &gameOver, &revealed, &numMines);
+          buttonPressed = true;
+        }
+        if (jp.joy0 & J_B)
+        {
+          setFlag(((Cell*)(firstCell+index)), cursorX, cursorY, &minesLeft);
+          buttonPressed = true;
+        }
       }
-      if (jp.joy0 & J_SELECT) toggleWindow(&windowState, &minesLeft);
+      if (jp.joy0 & J_SELECT)
+      {
+        toggleWindow(&windowState, &minesLeft);
+        buttonPressed = true;
+        NR21_REG = 0xC0U;
+        NR22_REG = 0xB5U;
+        NR23_REG = 0x49U;
+        NR24_REG = 0x87U;
+      }
 
-      delay(150U);
       wait_vbl_done();
+      if (buttonPressed) delay(200U);
     }
     showMines(cells, firstCell, lastCell, ((Cell*)(firstCell+index)));
     delay(2000U);
