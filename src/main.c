@@ -62,10 +62,10 @@ void countMines(Cell* cells, const Cell* firstCell, const Cell* lastCell)
     }
     if (((cells-firstCell)%20U) > 0 && (cells-1U)->isMinePresent) cells->adjacentMines++;
     if (((cells-firstCell)%20U) < 19 && (cells+1U)->isMinePresent) cells->adjacentMines++;
-    if ((cells-firstCell) > 20U && (cells-20U)->isMinePresent) cells->adjacentMines++;
+    if ((cells-firstCell) > 19U && (cells-20U)->isMinePresent) cells->adjacentMines++;
     if ((cells-firstCell) < 340U && (cells+20U)->isMinePresent) cells->adjacentMines++;
-    if (((cells-firstCell)%20U) > 0U && (cells-firstCell) > 20U && (cells-21U)->isMinePresent) cells->adjacentMines++;
-    if (((cells-firstCell)%20U) < 19U && (cells-firstCell) > 20U && (cells-19U)->isMinePresent) cells->adjacentMines++;
+    if (((cells-firstCell)%20U) > 0U && (cells-firstCell) > 19U && (cells-21U)->isMinePresent) cells->adjacentMines++;
+    if (((cells-firstCell)%20U) < 19U && (cells-firstCell) > 19U && (cells-19U)->isMinePresent) cells->adjacentMines++;
     if (((cells-firstCell)%20U) > 0U && (cells-firstCell) < 340U && (cells+19U)->isMinePresent) cells->adjacentMines++;
     if (((cells-firstCell)%20U) < 19U && (cells-firstCell) < 340U && (cells+21U)->isMinePresent) cells->adjacentMines++;
     cells++;
@@ -91,15 +91,19 @@ void revealCell(Cell* cells, const Cell* firstCell, bool* gameOver, uint16_t* re
   {
     *gameOver = true;
     *revealed = (*revealed) - 1U;
+    NR41_REG = 0x3FU;
+    NR42_REG = 0xF7U;
+    NR43_REG = 0x80U;
+    NR44_REG = 0x80U;
   }
   else if (cells->adjacentMines == 0)
   {
     if (((cells-firstCell)%20U) > 0U) revealCell((cells-1U), firstCell, gameOver, revealed, numMines);
     if (((cells-firstCell)%20U) < 19U) revealCell((cells+1U), firstCell, gameOver, revealed, numMines);
-    if ((cells-firstCell) > 20U) revealCell((cells-20U), firstCell, gameOver, revealed, numMines);
+    if ((cells-firstCell) > 19U) revealCell((cells-20U), firstCell, gameOver, revealed, numMines);
     if ((cells-firstCell) < 340U) revealCell((cells+20U), firstCell, gameOver, revealed, numMines);
-    if (((cells-firstCell)%20U) > 0U && (cells-firstCell) > 20U) revealCell((cells-21U), firstCell, gameOver, revealed, numMines);
-    if (((cells-firstCell)%20U) < 19U && (cells-firstCell) > 20U) revealCell((cells-19U), firstCell, gameOver, revealed, numMines);
+    if (((cells-firstCell)%20U) > 0U && (cells-firstCell) > 19U) revealCell((cells-21U), firstCell, gameOver, revealed, numMines);
+    if (((cells-firstCell)%20U) < 19U && (cells-firstCell) > 19U) revealCell((cells-19U), firstCell, gameOver, revealed, numMines);
     if (((cells-firstCell)%20U) > 0U && (cells-firstCell) < 340U) revealCell((cells+19U), firstCell, gameOver, revealed, numMines);
     if (((cells-firstCell)%20U) < 19U && (cells-firstCell) < 340U) revealCell((cells+21U), firstCell, gameOver, revealed, numMines);
   }
@@ -131,7 +135,7 @@ void resetGame(Cell* cells, const Cell* firstCell, const Cell* lastCell, bool* g
 
   do
   {
-    buttonPressed = false;
+    *buttonPressed = false;
     joypad_ex(jp);
     if (jp->joy0 & J_DOWN)
     {
@@ -148,10 +152,19 @@ void resetGame(Cell* cells, const Cell* firstCell, const Cell* lastCell, bool* g
       if (*cursorY > 88U) *cursorY = 56U;
       if (*cursorY < 56U) *cursorY = 88U;
       move_sprite(MENU_SEL, *cursorX, *cursorY);
+      NR10_REG = 0x00U;
+      NR11_REG = 0x90U;
+      NR12_REG = 0x43U;
+      NR13_REG = 0x73U;
+      NR14_REG = 0x86U;
     }
     wait_vbl_done();
     if (*buttonPressed) delay(200U);
   } while ((jp->joy0 & J_A) == 0U);
+  NR21_REG = 0xC0U;
+  NR22_REG = 0xB5U;
+  NR23_REG = 0x49U;
+  NR24_REG = 0x87U;
 
   switch (*cursorY)
   {
@@ -253,6 +266,10 @@ bool buttonPressed;
 
 void main(void)
 {
+  NR52_REG = 0x80U;
+  NR50_REG = 0x77U;
+  NR51_REG = 0xFFU;
+
   windowState = false;
 
   set_bkg_data(0U, 203U, SplashScreenTiles);
@@ -337,6 +354,10 @@ void main(void)
       {
         toggleWindow(&windowState, &minesLeft);
         buttonPressed = true;
+        NR21_REG = 0xC0U;
+        NR22_REG = 0xB5U;
+        NR23_REG = 0x49U;
+        NR24_REG = 0x87U;
       }
 
       wait_vbl_done();
