@@ -158,7 +158,7 @@ void resetGame(Cell* cells, const Cell* firstCell, const Cell* lastCell, bool* g
       NR13_REG = 0x73U;
       NR14_REG = 0x86U;
     }
-    wait_vbl_done();
+    vsync();
     if (*buttonPressed) delay(200U);
   } while ((jp->joy0 & J_A) == 0U);
   NR21_REG = 0xC0U;
@@ -221,7 +221,7 @@ void waitForInput(joypads_t* jp, const uint8_t button)
   do
   {
     joypad_ex(jp);
-    wait_vbl_done();
+    vsync();
   } while ((jp->joy0 & button) == 0U);
 }
 
@@ -360,7 +360,7 @@ void main(void)
         NR24_REG = 0x87U;
       }
 
-      wait_vbl_done();
+      vsync();
       if (buttonPressed) delay(200U);
     }
     showMines(cells, firstCell, lastCell, ((Cell*)(firstCell+index)));
