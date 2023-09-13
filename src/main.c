@@ -2,15 +2,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <rand.h>
-#include "tiles\MineTiles.h"
-#include "tiles\SplashScreenTiles.h"
-#include "maps\MineMap.h"
-#include "maps\GameOverMap.h"
-#include "maps\WinMap.h"
-#include "maps\LoseMap.h"
-#include "maps\MenuMap.h"
-#include "maps\SplashScreenMap.h"
-#include "maps\WindowMap.h"
+#include "tiles/MineTiles.h"
+#include "tiles/SplashScreenTiles.h"
+#include "maps/MineMap.h"
+#include "maps/GameOverMap.h"
+#include "maps/WinMap.h"
+#include "maps/LoseMap.h"
+#include "maps/MenuMap.h"
+#include "maps/SplashScreenMap.h"
+#include "maps/WindowMap.h"
 
 
 #define NUM_CELLS ((uint16_t)360U)
