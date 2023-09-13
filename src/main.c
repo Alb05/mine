@@ -2,15 +2,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <rand.h>
-#include "tiles\MineTiles.h"
-#include "tiles\SplashScreenTiles.h"
-#include "maps\MineMap.h"
-#include "maps\GameOverMap.h"
-#include "maps\WinMap.h"
-#include "maps\LoseMap.h"
-#include "maps\MenuMap.h"
-#include "maps\SplashScreenMap.h"
-#include "maps\WindowMap.h"
+#include "tiles/MineTiles.h"
+#include "tiles/SplashScreenTiles.h"
+#include "maps/MineMap.h"
+#include "maps/GameOverMap.h"
+#include "maps/WinMap.h"
+#include "maps/LoseMap.h"
+#include "maps/MenuMap.h"
+#include "maps/SplashScreenMap.h"
+#include "maps/WindowMap.h"
 
 
 #define NUM_CELLS ((uint16_t)360U)
@@ -27,7 +27,7 @@ typedef struct _cell
 } Cell;
 
 
-void cleanCells(Cell* cells, const Cell* lastCell)
+void cleanCells(Cell* cells, const Cell* const lastCell)
 {
   while (cells <= lastCell)
   {
@@ -40,7 +40,7 @@ void cleanCells(Cell* cells, const Cell* lastCell)
 }
 
 
-void setMines(Cell* cells, const uint8_t* numMines)
+void setMines(Cell* const cells, const uint8_t* const numMines)
 {
   for (uint16_t i = 0; i < *numMines; i++)
   {
@@ -52,7 +52,7 @@ void setMines(Cell* cells, const uint8_t* numMines)
 }
 
 
-void countMines(Cell* cells, const Cell* firstCell, const Cell* lastCell)
+void countMines(Cell* cells, const Cell* const firstCell, const Cell* const lastCell)
 {
   while (cells <= lastCell)
   {
@@ -73,7 +73,7 @@ void countMines(Cell* cells, const Cell* firstCell, const Cell* lastCell)
 }
 
 
-void revealCell(Cell* cells, const Cell* firstCell, bool* gameOver, uint16_t* revealed, const uint8_t* numMines)
+void revealCell(Cell* const cells, const Cell* const firstCell, bool* const gameOver, uint16_t* const revealed, const uint8_t* const numMines)
 {
   if (cells->isRevealed || cells->isFlagPresent)
   {
@@ -110,7 +110,7 @@ void revealCell(Cell* cells, const Cell* firstCell, bool* gameOver, uint16_t* re
 }
 
 
-void setFlag(Cell* cells, const uint8_t cursorX, const uint8_t cursorY, uint8_t* minesLeft)
+void setFlag(Cell* const cells, const uint8_t cursorX, const uint8_t cursorY, uint8_t* const minesLeft)
 {
   if (!cells->isRevealed && (*minesLeft > 0U || cells->isFlagPresent))
   {
@@ -121,7 +121,7 @@ void setFlag(Cell* cells, const uint8_t cursorX, const uint8_t cursorY, uint8_t*
 }
 
 
-void resetGame(Cell* cells, const Cell* firstCell, const Cell* lastCell, bool* gameOver, uint16_t* revealed, uint8_t* cursorX, uint8_t* cursorY, joypads_t* jp, uint8_t* numMines, uint8_t* minesLeft, bool* buttonPressed)
+void resetGame(Cell* const cells, const Cell* const firstCell, const Cell* const lastCell, bool* const gameOver, uint16_t* const revealed, uint8_t* const cursorX, uint8_t* const cursorY, joypads_t* const jp, uint8_t* const numMines, uint8_t* const minesLeft, bool* const buttonPressed)
 {
   hide_sprite(CURSOR);
   set_bkg_tiles(0U, 0U, MenuMapWidth, MenuMapHeight, MenuMap);
@@ -206,7 +206,7 @@ void resetGame(Cell* cells, const Cell* firstCell, const Cell* lastCell, bool* g
 }
 
 
-void showMines(Cell* cells, const Cell* firstCell, const Cell* lastCell, const Cell* index)
+void showMines(Cell* cells, const Cell* const firstCell, const Cell* const lastCell, const Cell* const index)
 {
   while (cells <= lastCell)
   {
@@ -216,7 +216,7 @@ void showMines(Cell* cells, const Cell* firstCell, const Cell* lastCell, const C
 }
 
 
-void waitForInput(joypads_t* jp, const uint8_t button)
+void waitForInput(joypads_t* const jp, const uint8_t button)
 {
   do
   {
@@ -226,7 +226,7 @@ void waitForInput(joypads_t* jp, const uint8_t button)
 }
 
 
-void toggleWindow(bool* state, const uint8_t* minesLeft)
+void toggleWindow(bool* const state, const uint8_t* const minesLeft)
 {
   *state = !(*state);
   if (*state)
@@ -249,8 +249,8 @@ void toggleWindow(bool* state, const uint8_t* minesLeft)
 
 
 Cell cells[NUM_CELLS];
-const Cell* lastCell = &cells[NUM_CELLS-1U];
-const Cell* firstCell = &cells[0U];
+const Cell* const lastCell = &cells[NUM_CELLS-1U];
+const Cell* const firstCell = &cells[0U];
 uint16_t seed;
 joypads_t jp;
 uint8_t cursorX;
