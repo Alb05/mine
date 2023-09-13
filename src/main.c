@@ -11,6 +11,7 @@
 #include "maps/MenuMap.h"
 #include "maps/SplashScreenMap.h"
 #include "maps/WindowMap.h"
+#include "maps/CreditsMap.h"
 
 
 #define NUM_CELLS ((uint16_t)360U)
@@ -248,6 +249,32 @@ void toggleWindow(bool* const state, const uint8_t* const minesLeft)
 }
 
 
+void fadein(void)
+{
+  BGP_REG = DMG_PALETTE(DMG_WHITE, DMG_WHITE, DMG_WHITE, DMG_LITE_GRAY);
+  vsync();
+  delay(200U);
+  BGP_REG = DMG_PALETTE(DMG_WHITE, DMG_WHITE, DMG_LITE_GRAY, DMG_DARK_GRAY);
+  vsync();
+  delay(200U);
+  BGP_REG = DMG_PALETTE(DMG_WHITE, DMG_LITE_GRAY, DMG_DARK_GRAY, DMG_BLACK);
+  vsync();
+}
+
+
+void fadeout(void)
+{
+  BGP_REG = DMG_PALETTE(DMG_WHITE, DMG_WHITE, DMG_LITE_GRAY, DMG_DARK_GRAY);
+  vsync();
+  delay(200U);
+  BGP_REG = DMG_PALETTE(DMG_WHITE, DMG_WHITE, DMG_WHITE, DMG_LITE_GRAY);
+  vsync();
+  delay(200U);
+  BGP_REG = DMG_PALETTE(DMG_WHITE, DMG_WHITE, DMG_WHITE, DMG_WHITE);
+  vsync();
+}
+
+
 Cell cells[NUM_CELLS];
 const Cell* const lastCell = &cells[NUM_CELLS-1U];
 const Cell* const firstCell = &cells[0U];
@@ -272,14 +299,35 @@ void main(void)
 
   windowState = false;
 
-  set_bkg_data(0U, 203U, SplashScreenTiles);
-  set_bkg_tiles(0U, 0U, SplashScreenMapWidth, SplashScreenMapHeight, SplashScreenMap);
-
   joypad_init(1U, &jp);
+
+  BGP_REG = DMG_PALETTE(DMG_WHITE, DMG_WHITE, DMG_WHITE, DMG_WHITE);
+
+  set_bkg_data(0U, 63U, MineTiles);
+  set_bkg_tiles(0U, 0U, CreditsMapWidth, CreditsMapHeight, CreditsMap);
 
   SHOW_BKG;
   SHOW_SPRITES;
   DISPLAY_ON;
+
+  fadein();
+
+  delay(3000U);
+
+  fadeout();
+
+  display_off();
+  HIDE_SPRITES;
+  HIDE_BKG;
+
+  set_bkg_data(0U, 203U, SplashScreenTiles);
+  set_bkg_tiles(0U, 0U, SplashScreenMapWidth, SplashScreenMapHeight, SplashScreenMap);
+
+  SHOW_BKG;
+  SHOW_SPRITES;
+  DISPLAY_ON;
+
+  fadein();
 
   waitForInput(&jp, J_START);
 
