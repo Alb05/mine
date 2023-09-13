@@ -13,7 +13,7 @@ LCC = $(GBDK_HOME)bin/lcc
 # For example, you can uncomment the line below to turn on debug output
 LCCFLAGS += -Wa-l
 LCCFLAGS += -Wl-m
-LCCFLAGS += -Wf-debug
+LCCFLAGS += -Wf--debug
 LCCFLAGS += -Wl-y
 LCCFLAGS += -Wl-w
 
